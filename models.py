@@ -73,48 +73,48 @@ def InceptionTemporal(n_neurons=256, seq_len=3, classes=101, weights='imagenet',
 
     return result_model
 
-def InceptionMultistream(n_neurons=256, seq_len=3, classes=101, weights='imagenet', 
-    dropout=0.8, fine=True, retrain=False, pre_file='',old_epochs=0,cross_index=1, pre_train=None,temp_rate=1):
+# def InceptionMultistream(n_neurons=256, seq_len=3, classes=101, weights='imagenet', 
+#     dropout=0.8, fine=True, retrain=False, pre_file='',old_epochs=0,cross_index=1, pre_train=None,temp_rate=1):
 
-    if weights != 'imagenet':
-        weight = None
-    else:
-        weight = weights
+#     if weights != 'imagenet':
+#         weight = None
+#     else:
+#         weight = weights
 
-    spatial = InceptionSpatialLSTMConsensus(
-                    n_neurons=n_neurons, seq_len=seq_len, classes=classes, 
-                    weights=weight, dropout=dropout, fine=fine, retrain=False,
-                    pre_file=pre_file,old_epochs=old_epochs,cross_index=cross_index)
+#     spatial = InceptionSpatialLSTMConsensus(
+#                     n_neurons=n_neurons, seq_len=seq_len, classes=classes, 
+#                     weights=weight, dropout=dropout, fine=fine, retrain=False,
+#                     pre_file=pre_file,old_epochs=old_epochs,cross_index=cross_index)
 
-    if (weights == 'pretrain') & (not retrain):
-        spatial.load_weights('weights/incept229_spatial_lstm{}_{}e_cr{}.h5'.format(n_neurons,pre_train[0],cross_index))
-        print 'load spatial weights'
-    spatial.pop()
-    spatial.pop()
+#     if (weights == 'pretrain') & (not retrain):
+#         spatial.load_weights('weights/incept229_spatial_lstm{}_{}e_cr{}.h5'.format(n_neurons,pre_train[0],cross_index))
+#         print 'load spatial weights'
+#     spatial.pop()
+#     spatial.pop()
 
-    temporal = InceptionTemporalLSTMConsensus(
-                    n_neurons=n_neurons, seq_len=seq_len, classes=classes, 
-                    weights=weight, dropout=dropout, fine=fine, retrain=False,
-                    pre_file=pre_file,old_epochs=old_epochs,cross_index=cross_index)
+#     temporal = InceptionTemporalLSTMConsensus(
+#                     n_neurons=n_neurons, seq_len=seq_len, classes=classes, 
+#                     weights=weight, dropout=dropout, fine=fine, retrain=False,
+#                     pre_file=pre_file,old_epochs=old_epochs,cross_index=cross_index)
 
-    if (weights == 'pretrain') & (not retrain):
-        temporal.load_weights('weights/incept229_temporal{}_lstm{}_{}e_cr{}.h5'.format(temp_rate,n_neurons,pre_train[1],cross_index))
-        print 'load temporal weights'
+#     if (weights == 'pretrain') & (not retrain):
+#         temporal.load_weights('weights/incept229_temporal{}_lstm{}_{}e_cr{}.h5'.format(temp_rate,n_neurons,pre_train[1],cross_index))
+#         print 'load temporal weights'
 
-    temporal.pop()
-    temporal.pop()
+#     temporal.pop()
+#     temporal.pop()
 
-    concat = Concatenate()([spatial.output, temporal.output])
-    concat = Dropout(dropout)(concat)
-    concat = Dense(classes, activation='softmax')(concat)
+#     concat = Concatenate()([spatial.output, temporal.output])
+#     concat = Dropout(dropout)(concat)
+#     concat = Dense(classes, activation='softmax')(concat)
 
-    result_model = Model(inputs=[spatial.input, temporal.input], outputs=concat)
+#     result_model = Model(inputs=[spatial.input, temporal.input], outputs=concat)
 
-    if retrain:
-        result_model.load_weights('weights/{}_{}e_cr{}.h5'.format(pre_file,old_epochs,cross_index))
-        print 'load old weights'
+#     if retrain:
+#         result_model.load_weights('weights/{}_{}e_cr{}.h5'.format(pre_file,old_epochs,cross_index))
+#         print 'load old weights'
 
-    return result_model
+#     return result_model
 
 def foo(ip):
     a = ip[0]
