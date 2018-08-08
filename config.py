@@ -1,5 +1,5 @@
 def server():
-	return False
+	return True
 
 def data_input_path():
 	if server():
