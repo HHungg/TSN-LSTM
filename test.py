@@ -38,6 +38,6 @@ with open(class_file) as f0:
         if class_name:
             classInd.append(class_name)
 
-print classification_report(data3[1], y_pred3, digits=6)
-print precision_recall_fscore_support(data3[1], y_pred3, average='macro')
-print accuracy_score(data3[1], y_pred3)
+print (classification_report(data3[1], y_pred3, digits=6))
+print (precision_recall_fscore_support(data3[1], y_pred3, average='macro'))
+print (accuracy_score(data3[1], y_pred3))

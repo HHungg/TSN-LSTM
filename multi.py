@@ -18,7 +18,7 @@ parser.add_argument('-w', '--weights', help='Weights', default='imagenet')
 parser.add_argument('-ws', '--w_spatial', help='Spatial epoch pretrain', default=1, type=int)
 parser.add_argument('-wt', '--w_temporal', help='Temporal epoch pretrain', default=1, type=int)
 args = parser.parse_args()
-print args
+print (args)
 
 import sys
 import config
@@ -49,7 +49,7 @@ temp_rate = args.temporal
 seq_len = 3
 n_neurons = args.neural
 dropout = args.dropout
-pre_file = 'incept229_twostream2_{}_lstm{}'.format(temp_rate,n_neurons)
+pre_file = 'incept229_twostream1_{}_lstm{}'.format(temp_rate,n_neurons)
 
 if train & (not retrain):
     weights = args.weights
@@ -75,7 +75,7 @@ lr = args.lr
 decay = args.decay
 
 result_model.compile(loss='categorical_crossentropy',
-                     optimizer=optimizers.SGD(lr=lr, decay=decay, momentum=0.9, nesterov=False),
+                     optimizer=optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False),
                      metrics=['accuracy'])
     
 

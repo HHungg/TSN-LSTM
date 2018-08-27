@@ -4,7 +4,7 @@ parser.add_argument('-d', '--dataset', help='Dataset', default='ucf101')
 parser.add_argument('-s', '--segment', help='Number of segments', default=3, type=int)
 parser.add_argument('-debug', '--debug', help='Number of classes', default=1, type=int)
 args = parser.parse_args()
-print args
+print (args)
 
 import cv2
 import os
@@ -63,7 +63,7 @@ for l in range(length_data):
                 print(v + str(render[k]/2 + 1 + i).zfill(6) + '.jpg')
 
     if l%500 == 0:
-        print l
+        print (l)
 
 
 

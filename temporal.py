@@ -15,7 +15,7 @@ parser.add_argument('-fine', '--fine', help='Fine-tuning', default=1, type=int)
 parser.add_argument('-n', '--neural', help='LSTM neural', default=256, type=int)
 parser.add_argument('-t', '--temporal', help='Temporal rate', default=1, type=int)
 args = parser.parse_args()
-print args
+print (args)
 
 import sys
 import config

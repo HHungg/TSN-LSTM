@@ -39,7 +39,7 @@ def getTrainData(keys,batch_size,dataset,classes,train,data_type,split_sequence=
 
             Y_train = np_utils.to_categorical(Y_train,classes)
             if (train != 'train') & (i != 0) & ((i/batch_size) % 50 == 0):
-                print 'Test batch {}'.format(i/batch_size+1)
+                print ('Test batch {}'.format(i/batch_size+1))
             yield X_train, np.array(Y_train)
 
 def stack_single_sequence(chunk,data_type,dataset,train):
@@ -82,7 +82,7 @@ def stack_single_sequence(chunk,data_type,dataset,train):
             stack_return.append(stack_seq_optical_flow(opt[0],render_opt,data_type[0],pre_random,dataset,train))
 
     if len(stack_return) < len(chunk):
-        print 'Stacked data error'
+        print ('Stacked data error')
         sys.exit()
 
     return np.array(stack_return), labels
@@ -122,7 +122,7 @@ def stack_multi_sequence(chunk,multi_data_type,dataset,train):
         stack_return_opt.append(stack_seq_optical_flow(rgb[0],render_opt,multi_data_type[1],pre_random,dataset,train))
 
     if len(stack_return_rgb) < len(chunk):
-        print 'Stacked data error'
+        print ('Stacked data error')
         sys.exit()
 
     return [np.array(stack_return_rgb), np.array(stack_return_opt)], labels
@@ -152,7 +152,7 @@ def stack_seq_rgb(path_video,render_rgb,pre_random,dataset,train):
             i_index = 'frame' + str(i).zfill(6) + '.jpg'
         rgb = cv2.imread(data_folder_rgb + name_video + '/' + i_index)
         if rgb is None:
-            print 'Not found: ' + data_folder_rgb + name_video + '/' + i_index
+            print ('Not found: ' + data_folder_rgb + name_video + '/' + i_index)
             sys.exit()
 
         if x == -1:
@@ -218,7 +218,7 @@ def stack_seq_optical_flow(path_video,render_opt,data_type,pre_random,dataset,tr
             img_u = cv2.imread(u + str(render[k]/data_type + i).zfill(6) + '.jpg', 0)
             img_v = cv2.imread(v + str(render[k]/data_type + i).zfill(6) + '.jpg', 0) 
             if img_u is None:
-                print 'Not found:' + u + str(render[k]/data_type + i).zfill(6) + '.jpg'
+                print ('Not found:' + u + str(render[k]/data_type + i).zfill(6) + '.jpg')
                 sys.exit()
             img_u = img_u[:,0:340]
             img_v = img_v[:,0:340]

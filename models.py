@@ -41,7 +41,7 @@ def InceptionSpatial(n_neurons=256, seq_len=3, classes=101, weights='imagenet',
     result_model.add(LSTM(n_neurons, return_sequences=True))
     # result_model.add(AveragePooling1D(pool_size=seq_len))
     result_model.add(Flatten())
-    result_model.add(Dense(512, activation='relu'))
+    result_model.add(Dense(1024, activation='relu'))
     result_model.add(Dropout(dropout))
     result_model.add(Dense(classes, activation='softmax'))
 
@@ -64,7 +64,7 @@ def InceptionTemporal(n_neurons=256, seq_len=3, classes=101, weights='imagenet',
     result_model.add(TimeDistributed(inception, input_shape=(seq_len, 299,299,20)))
     result_model.add(LSTM(n_neurons, return_sequences=True))
     result_model.add(Flatten())
-    result_model.add(Dense(512, activation='relu'))
+    result_model.add(Dense(1024, activation='relu'))
     result_model.add(Dropout(dropout))
     result_model.add(Dense(classes, activation='softmax'))
 
@@ -87,11 +87,15 @@ def InceptionMultistream(n_neurons=256, seq_len=3, classes=101, weights='imagene
                     pre_file=pre_file,old_epochs=old_epochs,cross_index=cross_index)
 
     if (weights == 'pretrain') & (not retrain):
-        spatial.load_weights('weights/incept229_spatial_lstm{}_{}e_cr{}.h5'.format(n_neurons,pre_train[0],cross_index))
+        spatial.load_weights('weights/inception_spatial2fc_{}_{}e_cr{}.h5'.format(n_neurons,pre_train[0],cross_index))
         print 'load spatial weights'
+    
     spatial.pop()
     spatial.pop()
     spatial.pop()
+
+    for layer in spatial:
+        layer.trainable = False
 
     temporal = InceptionTemporal(
                     n_neurons=n_neurons, seq_len=seq_len, classes=classes, 
@@ -99,15 +103,18 @@ def InceptionMultistream(n_neurons=256, seq_len=3, classes=101, weights='imagene
                     pre_file=pre_file,old_epochs=old_epochs,cross_index=cross_index)
 
     if (weights == 'pretrain') & (not retrain):
-        temporal.load_weights('weights/incept229_temporal{}_lstm{}_{}e_cr{}.h5'.format(temp_rate,n_neurons,pre_train[1],cross_index))
+        temporal.load_weights('weights/incept_temporal{}_{}_{}e_cr{}.h5'.format(temp_rate,n_neurons,pre_train[1],cross_index))
         print 'load temporal weights'
 
     temporal.pop()
     temporal.pop()
     temporal.pop()
 
+    for layer in temporal:
+        layer.trainable = False
+
     concat = Concatenate()([spatial.output, temporal.output])
-    concat = Dense(512, activation=None)(concat)
+    concat = Dense(2048, activation=None)(concat)
     concat = BatchNormalization()(concat)
     concat = Activation('relu')(concat)
     concat = Dropout(dropout)(concat)
@@ -120,6 +127,7 @@ def InceptionMultistream(n_neurons=256, seq_len=3, classes=101, weights='imagene
         print 'load old weights'
 
     return result_model
+
 
 def foo(ip):
     a = ip[0]
@@ -141,7 +149,7 @@ def InceptionMultistream2(n_neurons=256, seq_len=3, classes=101, weights='imagen
 
     if (weights == 'pretrain') & (not retrain):
         spatial.load_weights('weights/inception_spatial2fc_{}_{}e_cr{}.h5'.format(n_neurons,pre_train[0],cross_index))
-        print 'load spatial weights'
+        print ('load spatial weights')
 #     spatial.pop()
 #     spatial.pop()
 
@@ -152,7 +160,7 @@ def InceptionMultistream2(n_neurons=256, seq_len=3, classes=101, weights='imagen
 
     if (weights == 'pretrain') & (not retrain):
         temporal.load_weights('weights/incept_temporal{}_{}_{}e_cr{}.h5'.format(temp_rate,n_neurons,pre_train[1],cross_index))
-        print 'load temporal weights'
+        print ('load temporal weights')
 
 #     temporal.pop()
 #     temporal.pop()
@@ -163,7 +171,7 @@ def InceptionMultistream2(n_neurons=256, seq_len=3, classes=101, weights='imagen
 
     if retrain:
         result_model.load_weights('weights/{}_{}e_cr{}.h5'.format(pre_file,old_epochs,cross_index))
-        print 'load old weights'
+        print ('load old weights')
 
     return result_model
 
@@ -183,8 +191,8 @@ def train_process(model, pre_file, data_type, epochs=20, dataset='ucf101',
 
     print('-'*40)
     print('{} training'.format(pre_file))
-    print 'Number samples: {}'.format(len_samples)
-    print 'Number valid: {}'.format(len_valid)
+    print( 'Number samples: {}'.format(len_samples))
+    print( 'Number valid: {}'.format(len_valid))
     print('-'*40)
 
     histories = []
@@ -241,7 +249,7 @@ def test_process(model, pre_file, data_type, epochs=20, dataset='ucf101',
 
     print('-'*40)
     print('{} testing'.format(pre_file))
-    print 'Number samples: {}'.format(len_samples)
+    print ('Number samples: {}'.format(len_samples))
     print('-'*40)
 
     Y_test = gd.getClassData(keys)
@@ -262,4 +270,4 @@ def test_process(model, pre_file, data_type, epochs=20, dataset='ucf101',
 
     y_classes = y_pred.argmax(axis=-1)
     print(classification_report(Y_test, y_classes, digits=6))
-    print 'Run time: {}'.format(run_time)
+    print ('Run time: {}'.format(run_time))

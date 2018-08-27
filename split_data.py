@@ -5,7 +5,7 @@ parser.add_argument('-c', '--cross', help='Fold cross validation index', default
 parser.add_argument('-s', '--segment', help='Number of segments', default=3, type=int)
 parser.add_argument('-debug', '--debug', help='Number of classes', default=1, type=int)
 args = parser.parse_args()
-print args
+print (args)
 
 import cv2
 import os
@@ -74,8 +74,8 @@ for i in range(length):
     elif (data[i][0] in test_name):
         test_data.append(data[i])
 
-print 'Generate {} train samples for {} dataset'.format(len(train_data),dataset)
-print 'Generate {} test samples for {} dataset'.format(len(test_data),dataset)
+print ('Generate {} train samples for {} dataset'.format(len(train_data),dataset))
+print ('Generate {} test samples for {} dataset'.format(len(test_data),dataset))
 
 # Ghi du lieu dia chi ra file
 with open(out_train_file,'wb') as f2:

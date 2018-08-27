@@ -4,7 +4,7 @@ parser.add_argument('-d', '--dataset', help='Dataset', default='ucf101')
 parser.add_argument('-s', '--segment', help='Number of segments', default=3, type=int)
 parser.add_argument('-debug', '--debug', help='Number of classes', default=1, type=int)
 args = parser.parse_args()
-print args
+print (args)
 
 import cv2
 import os
@@ -55,7 +55,7 @@ for l in range(length_data):
     path_video = data[l][0]
     leng = count_frames(data_input_folder + path_video + '.avi')
     if leng == 0:
-        print 'error'
+        print ('error')
         sys.exit()
     data[l].append(leng)
 

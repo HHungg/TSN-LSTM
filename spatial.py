@@ -14,7 +14,7 @@ parser.add_argument('-decay', '--decay', help='Decay', default=0.0, type=float)
 parser.add_argument('-fine', '--fine', help='Fine-tuning', default=1, type=int)
 parser.add_argument('-n', '--neural', help='LSTM neural', default=256, type=int)
 args = parser.parse_args()
-print args
+print (args)
 
 import sys
 import config
