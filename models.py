@@ -94,7 +94,7 @@ def InceptionMultistream(n_neurons=256, seq_len=3, classes=101, weights='imagene
     spatial.pop()
     spatial.pop()
 
-    for layer in spatial:
+    for layer in spatial.layers:
         layer.trainable = False
 
     temporal = InceptionTemporal(
@@ -110,7 +110,7 @@ def InceptionMultistream(n_neurons=256, seq_len=3, classes=101, weights='imagene
     temporal.pop()
     temporal.pop()
 
-    for layer in temporal:
+    for layer in temporal.layers:
         layer.trainable = False
 
     concat = Concatenate()([spatial.output, temporal.output])
