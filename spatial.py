@@ -70,7 +70,7 @@ lr = args.lr
 decay = args.decay
 
 result_model.compile(loss='categorical_crossentropy',
-                     optimizer=optimizers.SGD(lr=lr, decay=decay, momentum=0.9, nesterov=True),
+                     optimizer=optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False),
                      metrics=['accuracy'])
     
 
