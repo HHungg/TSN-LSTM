@@ -231,7 +231,7 @@ def train_process(model, pre_file, data_type, epochs=20, dataset='ucf101',
             validation_data=gd.getTrainData(
                 keys=keys_valid,batch_size=batch_size,dataset=dataset,classes=classes,train='valid',data_type=data_type,split_sequence=split_sequence),
             validation_steps=validation_steps,
-            callbacks=[Adam_lr(model)
+            callbacks=[Adam_lr(model)]
         )
         run_time = time.time() - time_start
 
