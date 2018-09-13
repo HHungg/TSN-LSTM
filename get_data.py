@@ -190,8 +190,14 @@ def stack_seq_rgb(path_video,render_rgb,pre_random,dataset,train):
 def stack_seq_optical_flow(path_video,render_opt,data_type,pre_random,dataset,train):
     data_folder_opt = r'{}{}-opt{}/'.format(data_output_path,dataset,data_type)
     name_video = path_video.split('/')[1]
-    u = data_folder_opt + 'u/' + name_video + '/frame'
-    v = data_folder_opt + 'v/' + name_video + '/frame'
+
+    if(data_type == 1):
+        u = data_folder_opt + 'u/' + name_video + '/frame'
+        v = data_folder_opt + 'v/' + name_video + '/frame'
+    else:
+        name_class = name_video.split('_')[1]
+        u = data_folder_opt + 'u/' + name_class + '/' + name_video + '/frame'
+        v = data_folder_opt + 'v/' + name_class + '/' + name_video + '/frame'
 
     # print (u,v)
 
