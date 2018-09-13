@@ -23,7 +23,8 @@ print (args)
 import sys
 import config
 import models
-from keras import optimizers
+from keras import optimizers, callbacks
+import keras.backend as K
 
 process = args.process
 if process == 'train':
@@ -82,7 +83,8 @@ result_model.compile(loss='categorical_crossentropy',
 if train:
     models.train_process(result_model, pre_file, data_type=[0, temp_rate], epochs=epochs, dataset=dataset,
         retrain=retrain,  classes=classes, cross_index=cross_index, 
-        seq_len=seq_len, old_epochs=old_epochs, batch_size=batch_size,fine=fine)
+        seq_len=seq_len, old_epochs=old_epochs, batch_size=batch_size,fine=fine, callbacks=print("Learning rate:" + K.eval(models.optimizer.lr)))
+
 
 else:
     models.test_process(result_model, pre_file, data_type=[0, temp_rate], epochs=epochs, dataset=dataset,

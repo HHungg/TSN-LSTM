@@ -18,20 +18,10 @@ from keras.applications.resnet50 import ResNet50
 from inceptionv3 import TempInceptionV3
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
-from keras import optimizers, callbacks
+from keras import optimizers
 
 server = config.server()
 data_output_path = config.data_output_path()
-
-def Adam_lr(model):
-    beta_1=0.9
-    beta_2=0.999
-    optimizer = model.optimizer
-    if optimizer.decay>0:
-        lr = K.eval(optimizer.lr * (1. / (1. + optimizer.decay * optimizer.iterations)))
-    t = K.cast(optimizer.iterations, K.floatx()) + 1
-    lr_t = lr * (K.sqrt(1. - K.pow(beta_2, t)) /(1. - K.pow(beta_1, t)))
-    print('\nLR: {:.6f}\n'.format(lr_t))
 
 def relu6(x):
     return K.relu(x, max_value=6)
@@ -230,9 +220,10 @@ def train_process(model, pre_file, data_type, epochs=20, dataset='ucf101',
             epochs=1,
             validation_data=gd.getTrainData(
                 keys=keys_valid,batch_size=batch_size,dataset=dataset,classes=classes,train='valid',data_type=data_type,split_sequence=split_sequence),
-            validation_steps=validation_steps,
-            callbacks=[Adam_lr(model)]
+            validation_steps=validation_steps
         )
+
+
         run_time = time.time() - time_start
 
         histories.append([
