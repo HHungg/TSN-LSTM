@@ -76,7 +76,10 @@ def stack_single_sequence(chunk,data_type,dataset,train):
         for opt in chunk:
             labels.append(opt[2])
             if (train == 'train'):
-                render_opt = random_position(opt[4], 3, False)
+                if(data_type[0]==2018):
+                    render_opt = random_position(opt[4], 3, False, random.randint(1,4))
+                else:
+                    render_opt = random_position(opt[4], 3, False, data_type[0])
             else:
                 render_opt = opt[1]
             stack_return.append(stack_seq_optical_flow(opt[0],render_opt,data_type[0],pre_random,dataset,train))
@@ -113,7 +116,10 @@ def stack_multi_sequence(chunk,multi_data_type,dataset,train):
     for rgb in chunk:
         labels.append(rgb[2])
         if (train == 'train'):
-            render_opt = random_position(rgb[4], 3, False)
+            if(multi_data_type[1]==2018):
+                render_opt = random_position(rgb[4], 3, False, random.randint(1,4))
+            else:
+                render_opt = random_position(rgb[4], 3, False, multi_data_type[1])
             render_rgb = np.array(render_opt) + 10
         else:
             render_opt = rgb[1]
@@ -216,40 +222,96 @@ def stack_seq_optical_flow(path_video,render_opt,data_type,pre_random,dataset,tr
         render = [render_opt[1]]
     len_render_opt = len(render)
 
-    for k in range(len_render_opt):
-        nstack = np.zeros((256,340,20))
-        if (render[k] <= data_type):
-            render[k] = data_type
-        for i in range(10):
-            img_u = cv2.imread(u + str(render[k]/data_type + i).zfill(6) + '.jpg', 0)
-            img_v = cv2.imread(v + str(render[k]/data_type + i).zfill(6) + '.jpg', 0) 
-            if img_u is None:
-                print ('Not found:' + u + str(render[k]/data_type + i).zfill(6) + '.jpg')
+    if data_type == 2018:
+        for k in range(len_render_opt):
+            data_type = np.random.randint(1, 4)
+            data_folder_opt = r'{}{}-opt{}/'.format(data_output_path,dataset,data_type)
+            name_video = path_video.split('/')[1]
+            if(data_type == 1):
+                u = data_folder_opt + 'u/' + name_video + '/frame'
+                v = data_folder_opt + 'v/' + name_video + '/frame'
+            else:
+                name_class = name_video.split('_')[1]
+                u = data_folder_opt + 'u/' + name_class + '/' + name_video + '/frame'
+                v = data_folder_opt + 'v/' + name_class + '/' + name_video + '/frame'
+
+            nstack = np.zeros((256,340,20))
+            if (render[k] <= data_type):
+                render[k] = data_type
+            for i in range(10):
+                img_u = cv2.imread(u + str(render[k]/data_type + i).zfill(6) + '.jpg', 0)
+                img_v = cv2.imread(v + str(render[k]/data_type + i).zfill(6) + '.jpg', 0) 
+                if img_u is None:
+                    print ('Not found:' + u + str(render[k]/data_type + i).zfill(6) + '.jpg')
+                    img_u = nstack[:,:,2*(i-1)]
+                    img_v = nstack[:,:,2*(i-1)+1]
+                if(data_type==3):
+                    img_u = cv2.resize(img_u,(340,256),interpolation=cv2.INTER_CUBIC)
+                    img_v = cv2.resize(img_v,(340,256),interpolation=cv2.INTER_CUBIC)
+                img_u = img_u[:,0:340]
+                img_v = img_v[:,0:340]
+                nstack[:,:,2*i] = img_u
+                nstack[:,:,2*i+1] = img_v
+
+            if train == 'train':
+                nstack = random_crop(nstack, size, mode_crop, mode_corner_crop, x, y)
+                nstack = random_flip(nstack, size, flip)
+            else:
+                nstack = image_crop(nstack, x, y, size)
+
+            height, width, channel = nstack.shape
+            if (height == size) & (width == size):
+                nstack = cv2.resize(nstack, (299, 299))
+                # print size
+                nstack_nor = nstack.astype('float16',copy=False)
+                # nstack/=255
+                # nstack_nor = nstack - nstack.mean(axis=2, keepdims=True)
+                # nstack_nor = nstack - nstack.mean()
+            else:
+                print('Error', mode_crop, flip, mode_corner_crop, size, height, x, y)
                 sys.exit()
-            img_u = img_u[:,0:340]
-            img_v = img_v[:,0:340]
-            nstack[:,:,2*i] = img_u
-            nstack[:,:,2*i+1] = img_v
 
-        if train == 'train':
-            nstack = random_crop(nstack, size, mode_crop, mode_corner_crop, x, y)
-            nstack = random_flip(nstack, size, flip)
-        else:
-            nstack = image_crop(nstack, x, y, size)
+            return_data.append(nstack_nor)
 
-        height, width, channel = nstack.shape
-        if (height == size) & (width == size):
-            nstack = cv2.resize(nstack, (299, 299))
-            # print size
-            nstack_nor = nstack.astype('float16',copy=False)
-            # nstack/=255
-            # nstack_nor = nstack - nstack.mean(axis=2, keepdims=True)
-            # nstack_nor = nstack - nstack.mean()
-        else:
-            print('Error', mode_crop, flip, mode_corner_crop, size, height, x, y)
-            sys.exit()
+    else:
+        for k in range(len_render_opt):
+            nstack = np.zeros((256,340,20))
+            if (render[k] <= data_type):
+                render[k] = data_type
+            for i in range(10):
+                img_u = cv2.imread(u + str(render[k]/data_type + i).zfill(6) + '.jpg', 0)
+                img_v = cv2.imread(v + str(render[k]/data_type + i).zfill(6) + '.jpg', 0) 
+                if img_u is None:
+                    print ('Not found:' + u + str(render[k]/data_type + i).zfill(6) + '.jpg')
+                    img_u = nstack[:,:,2*(i-1)]
+                    img_v = nstack[:,:,2*(i-1)+1]
+                if(data_type==3):
+                    img_u = cv2.resize(img_u,(340,256),interpolation=cv2.INTER_CUBIC)
+                    img_v = cv2.resize(img_v,(340,256),interpolation=cv2.INTER_CUBIC)
+                img_u = img_u[:,0:340]
+                img_v = img_v[:,0:340]
+                nstack[:,:,2*i] = img_u
+                nstack[:,:,2*i+1] = img_v
 
-        return_data.append(nstack_nor)
+            if train == 'train':
+                nstack = random_crop(nstack, size, mode_crop, mode_corner_crop, x, y)
+                nstack = random_flip(nstack, size, flip)
+            else:
+                nstack = image_crop(nstack, x, y, size)
+
+            height, width, channel = nstack.shape
+            if (height == size) & (width == size):
+                nstack = cv2.resize(nstack, (299, 299))
+                # print size
+                nstack_nor = nstack.astype('float16',copy=False)
+                # nstack/=255
+                # nstack_nor = nstack - nstack.mean(axis=2, keepdims=True)
+                # nstack_nor = nstack - nstack.mean()
+            else:
+                print('Error', mode_crop, flip, mode_corner_crop, size, height, x, y)
+                sys.exit()
+
+            return_data.append(nstack_nor)
 
     if (len_render_opt == 1):
         return_data.append(nstack_nor)
@@ -281,7 +343,7 @@ def convert_weights(weights, depth, size=3, ins=32):
             mat2[:,:,j,i] = x
     return [mat2]
 
-def random_position(length, num_seq, rgb=True):
+def random_position(length, num_seq, rgb=True, data_type=1):
     divide = length / num_seq
     train_render = []
     if (rgb):
@@ -292,18 +354,18 @@ def random_position(length, num_seq, rgb=True):
                 k = np.random.randint(divide*i+1,length)
             train_render.append(k)
     else:
-        if length > 60:
+        if length > 30*data_type:
             for i in range(num_seq):
                 if i < num_seq - 1:
-                    k = np.random.randint(divide*i+1,divide*(i+1)-18)
+                    k = np.random.randint(divide*i+1,divide*(i+1)-9*data_type)
                 else:
-                    k = np.random.randint(divide*i+1,length-19)
+                    k = np.random.randint(divide*i+1,length-9*data_type-1)
                 train_render.append(k)
         else:
-            if (length > 30):
-                train_render = [1, length/2-9, length-20]
+            if (length > 10*data_type):
+                train_render = random.choices(range(1, length - 30*data_type, 1), k=3).sort()
             else:
-                train_render = [-9, length/2-9, length-10]
+                train_render = [1, 1, 1]
     return train_render
 
 def random_size():
