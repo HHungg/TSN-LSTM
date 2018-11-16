@@ -243,8 +243,18 @@ def stack_seq_optical_flow(path_video,render_opt,data_type,pre_random,dataset,tr
                 img_v = cv2.imread(v + str(render[k]/data_type + i).zfill(6) + '.jpg', 0) 
                 if img_u is None:
                     print ('Not found:' + u + str(render[k]/data_type + i).zfill(6) + '.jpg')
-                    img_u = nstack[:,:,2*(i-1)]
-                    img_v = nstack[:,:,2*(i-1)+1]
+                    i = 0
+                    data_type = data_type - 1
+                    data_folder_opt = r'{}{}-opt{}/'.format(data_output_path,dataset,data_type)
+                    name_video = path_video.split('/')[1]
+                    if(data_type == 1):
+                        u = data_folder_opt + 'u/' + name_video + '/frame'
+                        v = data_folder_opt + 'v/' + name_video + '/frame'
+                    else:
+                        name_class = name_video.split('_')[1]
+                        u = data_folder_opt + 'u/' + name_class + '/' + name_video + '/frame'
+                        v = data_folder_opt + 'v/' + name_class + '/' + name_video + '/frame'
+                    continue
                 if(data_type==3):
                     img_u = cv2.resize(img_u,(340,256),interpolation=cv2.INTER_CUBIC)
                     img_v = cv2.resize(img_v,(340,256),interpolation=cv2.INTER_CUBIC)
@@ -285,9 +295,6 @@ def stack_seq_optical_flow(path_video,render_opt,data_type,pre_random,dataset,tr
                     print ('Not found:' + u + str(render[k]/data_type + i).zfill(6) + '.jpg')
                     img_u = nstack[:,:,2*(i-1)]
                     img_v = nstack[:,:,2*(i-1)+1]
-                if(data_type==3):
-                    img_u = cv2.resize(img_u,(340,256),interpolation=cv2.INTER_CUBIC)
-                    img_v = cv2.resize(img_v,(340,256),interpolation=cv2.INTER_CUBIC)
                 img_u = img_u[:,0:340]
                 img_v = img_v[:,0:340]
                 nstack[:,:,2*i] = img_u
@@ -363,7 +370,10 @@ def random_position(length, num_seq, rgb=True, data_type=1):
                 train_render.append(k)
         else:
             if (length > 10*data_type):
-                train_render = random.choices(range(1, length - 30*data_type, 1), k=3).sort()
+                for i in range(3):
+                    k = np.random.randint(1, length-10*data_type)
+                    train_render.append(k)
+                train_render.sort()
             else:
                 train_render = [1, 1, 1]
     return train_render
