@@ -364,9 +364,9 @@ def random_position(length, num_seq, rgb=True, data_type=1):
         if length > 30*data_type:
             for i in range(num_seq):
                 if i < num_seq - 1:
-                    k = np.random.randint(divide*i+1,divide*(i+1)-9*data_type)
+                    k = np.random.randint(divide*i+1,divide*(i+1)-9*data_type+1)
                 else:
-                    k = np.random.randint(divide*i+1,length-9*data_type-1)
+                    k = np.random.randint(divide*i+1,length-9*data_type+1)
                 train_render.append(k)
         else:
             if (length > 10*data_type):
