@@ -36,12 +36,23 @@ def InceptionSpatial(n_neurons=256, seq_len=3, classes=101, weights='imagenet',
         weights=weights,
     )
 
-    result_model = Sequential()
-    result_model.add(TimeDistributed(inception, input_shape=(seq_len, 299,299,3)))
-    result_model.add(LSTM(n_neurons, return_sequences=True))
+    model = Sequential()
+    model.add(TimeDistributed(inception, input_shape=(seq_len, 299,299,3)))
+    feature_inception = model.output
+    model.add(LSTM(n_neurons, return_sequences=True))
     # result_model.add(AveragePooling1D(pool_size=seq_len))
+    feature_LSTM = model.output
+    # result_model.add(Flatten())
+    # result_model.add(Dense(1024, activation='relu'))
+    # result_model.add(Dropout(dropout))
+    # result_model.add(Dense(classes, activation='softmax'))
+
+    concat = Concatenate()([feature_inception, feature_LSTM])
+    concat_model = Model(inputs=[model.input], outputs=concat)
+    result_model = Sequential()
+    result_model.add(concat_model)
     result_model.add(Flatten())
-    result_model.add(Dense(1024, activation='relu'))
+    result_model.add(Dense(2048, activation='relu'))
     result_model.add(Dropout(dropout))
     result_model.add(Dense(classes, activation='softmax'))
 
@@ -88,7 +99,7 @@ def InceptionMultistream(n_neurons=256, seq_len=3, classes=101, weights='imagene
 
     if (weights == 'pretrain') & (not retrain):
         spatial.load_weights('weights/inception_spatial2fc_{}_{}e_cr{}.h5'.format(n_neurons,pre_train[0],cross_index))
-        print 'load spatial weights'
+        print ('load spatial weights')
     
     spatial.pop()
     spatial.pop()
@@ -104,7 +115,7 @@ def InceptionMultistream(n_neurons=256, seq_len=3, classes=101, weights='imagene
 
     if (weights == 'pretrain') & (not retrain):
         temporal.load_weights('weights/incept_temporal{}_{}_{}e_cr{}.h5'.format(temp_rate,n_neurons,pre_train[1],cross_index))
-        print 'load temporal weights'
+        print ('load temporal weights')
 
     temporal.pop()
     temporal.pop()
@@ -124,7 +135,7 @@ def InceptionMultistream(n_neurons=256, seq_len=3, classes=101, weights='imagene
 
     if retrain:
         result_model.load_weights('weights/{}_{}e_cr{}.h5'.format(pre_file,old_epochs,cross_index))
-        print 'load old weights'
+        print ('load old weights')
 
     return result_model
 
