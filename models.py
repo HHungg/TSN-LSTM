@@ -7,15 +7,15 @@ import get_data as gd
 import keras.backend as K
 from keras.models import Model
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Flatten, ZeroPadding2D, Concatenate, BatchNormalization
-from keras.layers import TimeDistributed, Activation, AveragePooling1D
+from keras.layers import Dense, Dropout, Flatten, ZeroPadding2D, Concatenate, BatchNormalization, add
+from keras.layers import TimeDistributed, Activation, AveragePooling1D, GlobalMaxPooling2D
 from keras.layers import LSTM, GlobalAveragePooling1D, Reshape, MaxPooling1D, Conv2D
 from keras.layers import Input, Lambda, Average, average
 from keras.applications.mobilenet import MobileNet
 from keras.applications.inception_v3 import InceptionV3
 from keras.applications.densenet import DenseNet169, DenseNet121, DenseNet201
 from keras.applications.resnet50 import ResNet50
-from inceptionv3 import TempInceptionV3
+from inceptionv3 import TempInceptionV3, Inception_v3a, Inception_v3b, Inception_v3c
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from keras import optimizers
@@ -29,32 +29,34 @@ def relu6(x):
 def InceptionSpatial(n_neurons=256, seq_len=3, classes=101, weights='imagenet', 
     dropout=0.5, fine=True, retrain=False, pre_file='',old_epochs=0,cross_index=1):
 
-    inception = InceptionV3(
+    inceptionv3a, x = Inception_v3a(
         input_shape=(299,299,3),
         pooling='avg',
         include_top=False,
         weights=weights,
     )
+    inceptionv3b, x = Inception_v3b(inceptionv3a.output_shape, x)
+    inceptionv3c, x = Inception_v3c(inceptionv3b.output_shape, x)
 
-    model = Sequential()
-    model.add(TimeDistributed(inception, input_shape=(seq_len, 299,299,3)))
-    feature_inception = model.output
-    model.add(LSTM(n_neurons, return_sequences=True))
-    # result_model.add(AveragePooling1D(pool_size=seq_len))
-    feature_LSTM = model.output
-    # result_model.add(Flatten())
-    # result_model.add(Dense(1024, activation='relu'))
-    # result_model.add(Dropout(dropout))
-    # result_model.add(Dense(classes, activation='softmax'))
+    model = TimeDistributed(inceptionv3a, input_shape=(seq_len, 299,299,3))
+    loss1 = GlobalMaxPooling2D()(model)
+    loss1 = Dense(classes, activation='softmax')(loss1)
 
-    concat = Concatenate()([feature_inception, feature_LSTM])
-    concat_model = Model(inputs=[model.input], outputs=concat)
-    result_model = Sequential()
-    result_model.add(concat_model)
-    result_model.add(Flatten())
-    result_model.add(Dense(2048, activation='relu'))
-    result_model.add(Dropout(dropout))
-    result_model.add(Dense(classes, activation='softmax'))
+    model = TimeDistributed(inceptionv3b, input_shape=model.output_shape)(model)
+    loss2 = GlobalMaxPooling2D()(model)
+    loss2 = Dense(classes, activation='softmax')(loss2)
+
+    model = TimeDistributed(inceptionv3c, input_shape=model.output_shape)(model)
+    model = LSTM(n_neurons, return_sequences=True)(model)
+    model = Flatten()(model)
+    model = Dense(256, activation='relu')(model)
+    model = Dropout(dropout)(model)
+    model = Dense(classes, activation='softmax')(model)
+
+    result_model = Model(
+			inputs=Input(seq_len, 299,299,3),
+			outputs=[loss1, loss2, model],
+			name="InceptionSpatial")
 
     if retrain:
         result_model.load_weights('weights/{}_{}e_cr{}.h5'.format(pre_file,old_epochs,cross_index))
@@ -101,9 +103,9 @@ def InceptionMultistream(n_neurons=256, seq_len=3, classes=101, weights='imagene
         spatial.load_weights('weights/inception_spatial2fc_{}_{}e_cr{}.h5'.format(n_neurons,pre_train[0],cross_index))
         print ('load spatial weights')
     
-    spatial.pop()
-    spatial.pop()
-    spatial.pop()
+    spatial.layers.pop()
+    spatial.layers.pop()
+    spatial.layers.pop()
 
     for layer in spatial.layers:
         layer.trainable = False
