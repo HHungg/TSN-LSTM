@@ -33,6 +33,13 @@ from keras.applications.imagenet_utils import decode_predictions
 from keras.applications.imagenet_utils import _obtain_input_shape
 import tensorflow as tf
 
+from keras.applications import get_submodules_from_kwargs
+
+backend = None
+layers = None
+models = None
+keras_utils = None
+
 def output_of_lambda(input_shape):
     return (input_shape[0], 229,299,20)
 
@@ -89,24 +96,33 @@ def conv2d_bn(x,
     x = Activation('relu', name=name)(x)
     return x
 
-def Inception_v3a(include_top=True,
+def Inception_v3a(include_top=False,
                 weights='imagenet',
                 input_tensor=None,
                 input_shape=None,
                 pooling=None,
                 classes=1000,
                 depth=3,
-                pre='custom_'):
+                pre='custom_',
+                **kwargs):
+    
+    global backend, layers, models, keras_utils
+    backend, layers, models, keras_utils = get_submodules_from_kwargs(kwargs)
 
     # Determine proper input shape
-    if input_shape is None:
-        input_shape = (None,None,depth)
+    input_shape = _obtain_input_shape(
+        input_shape,
+        default_size=299,
+        min_size=75,
+        data_format=backend.image_data_format(),
+        require_flatten=include_top,
+        weights=weights)
 
     if input_tensor is None:
-        img_input = Input(shape=input_shape)
+        img_input = layers.Input(shape=input_shape)
     else:
-        if not K.is_keras_tensor(input_tensor):
-            img_input = Input(tensor=input_tensor, shape=input_shape)
+        if not backend.is_keras_tensor(input_tensor):
+            img_input = layers.Input(tensor=input_tensor, shape=input_shape)
         else:
             img_input = input_tensor
 
@@ -192,14 +208,26 @@ def Inception_v3a(include_top=True,
     # Create model.
     model = Model(inputs, x, name=pre + 'inception_v3a')
 
-    return model, x
+    return model
 
-def Inception_v3b(inputs, x, pre='custom_', weights='imagenet'):
+def Inception_v3b(input_tensor=None, input_shape=None, pre='custom_', weights='imagenet', depth=3):
+    if input_shape is None:
+        input_shape = (None,None,depth)
+
+    if input_tensor is None:
+        img_input = Input(shape=input_shape)
+    else:
+        if not K.is_keras_tensor(input_tensor):
+            img_input = Input(tensor=input_tensor, shape=input_shape)
+        else:
+            img_input = input_tensor
+
     if K.image_data_format() == 'channels_first':
         channel_axis = 1
     else:
         channel_axis = 3
     # mixed 4: 17 x 17 x 768
+    x = img_input
     branch1x1 = conv2d_bn(x, 192, 1, 1)
 
     branch7x7 = conv2d_bn(x, 128, 1, 1)
@@ -275,15 +303,29 @@ def Inception_v3b(inputs, x, pre='custom_', weights='imagenet'):
     branch_pool = MaxPooling2D((3, 3), strides=(2, 2))(x)
     x = layers.concatenate(
         [branch3x3, branch7x7x3, branch_pool], axis=channel_axis, name=pre + 'mixed8')
-    model = Model(inputs, x, name=pre + 'inception_v3a')
-    return model, x
 
-def Inception_v3c(inputs, x, pre='custom_', weights='imagenet', pooling='avg'):
+    inputs = img_input
+    model = Model(inputs, x, name=pre + 'inception_v3b')
+    return model
+
+def Inception_v3c(input_tensor=None, input_shape=None, pre='custom_', weights='imagenet', depth=3, pooling='avg'):
+    if input_shape is None:
+        input_shape = (None,None,depth)
+
+    if input_tensor is None:
+        img_input = Input(shape=input_shape)
+    else:
+        if not K.is_keras_tensor(input_tensor):
+            img_input = Input(tensor=input_tensor, shape=input_shape)
+        else:
+            img_input = input_tensor
+
     if K.image_data_format() == 'channels_first':
         channel_axis = 1
     else:
         channel_axis = 3
     # mixed 9: 8 x 8 x 2048
+    x = img_input
     for i in range(2):
         branch1x1 = conv2d_bn(x, 320, 1, 1)
 
@@ -313,8 +355,9 @@ def Inception_v3c(inputs, x, pre='custom_', weights='imagenet', pooling='avg'):
     elif pooling == 'max':
         x = GlobalMaxPooling2D()(x)
 
+    inputs = img_input
     # Create model.
-    model = Model(inputs, x, name=pre + 'inception_v3')
+    model = Model(inputs, x, name=pre + 'inception_v3c')
     return model, x
 
 def TempInceptionV3(include_top=True,
@@ -539,3 +582,12 @@ def TempInceptionV3(include_top=True,
         print ('Loaded weights')
 
     return model
+
+def preprocess_input(x, **kwargs):
+    """Preprocesses a numpy array encoding a batch of images.
+    # Arguments
+        x: a 4D numpy array consists of RGB values within [0, 255].
+    # Returns
+        Preprocessed array.
+    """
+    return imagenet_utils.preprocess_input(x, mode='tf', **kwargs)

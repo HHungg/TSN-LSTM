@@ -29,14 +29,9 @@ def relu6(x):
 def InceptionSpatial(n_neurons=256, seq_len=3, classes=101, weights='imagenet', 
     dropout=0.5, fine=True, retrain=False, pre_file='',old_epochs=0,cross_index=1):
 
-    inceptionv3a, x = Inception_v3a(
-        input_shape=(299,299,3),
-        pooling='avg',
-        include_top=False,
-        weights=weights,
-    )
-    inceptionv3b, x = Inception_v3b(inceptionv3a.output_shape, x)
-    inceptionv3c, x = Inception_v3c(inceptionv3b.output_shape, x)
+    inceptionv3a = Inception_v3a(input_shape=(299,299,3), pooling='avg', weights=weights)
+    inceptionv3b =Inception_v3b(inceptionv3a.output_shape, inceptionv3a.output)
+    inceptionv3c = Inception_v3c(inceptionv3b.output_shape, inceptionv3b.output)
 
     model = TimeDistributed(inceptionv3a, input_shape=(seq_len, 299,299,3))
     loss1 = GlobalMaxPooling2D()(model)
