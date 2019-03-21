@@ -69,9 +69,16 @@ if (args.summary == 1):
 lr = args.lr 
 decay = args.decay
 
-result_model.compile(loss='categorical_crossentropy',
-                     optimizer=optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False),
-                     metrics=['accuracy'])
+losses = {
+	"loss1": "categorical_crossentropy",
+	"loss2": "categorical_crossentropy",
+    "loss3": "categorical_crossentropy"
+}
+lossWeights = {"loss1": 1.0, "loss2": 1.0, "loss3": 1.0}
+
+opt = optimizers.Adam(lr=lr, decay=lr / epochs)
+result_model.compile(optimizer=opt, loss=losses, loss_weights=lossWeights,
+	metrics=["accuracy"])
     
 
 if train:
